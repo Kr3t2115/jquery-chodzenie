@@ -23,10 +23,12 @@ $(function () {
     {
       x: 2,
       y: 0,
+      czyZebrane: false,
     },
     {
       x: 4,
       y: 2,
+      czyZebrane: false,
     },
   ];
 
@@ -75,6 +77,7 @@ $(function () {
     let obecnaPozycja = {};
 
     let uzywaneKlucz = {
+      //wsad
       119: {
         y: -1,
         x: 0,
@@ -105,11 +108,19 @@ $(function () {
           $(element).data("y") == nowaPozycja.y &&
           $(element).data("pszeszkoda") != true
         ) {
-          if ($(element).data("punkt") == true) {
-            iloscPunktow++;
-            $(".punkty").text("Liczba punktów: " + iloscPunktow);
-            $(element).removeClass("punkt");
-          }
+          $.each(tablicaPunktow, function (index, punkt) {
+            if (
+              punkt.x == nowaPozycja.x &&
+              punkt.y == nowaPozycja.y &&
+              punkt.czyZebrane == false
+            ) {
+              iloscPunktow++;
+              punkt.czyZebrane = true;
+              $(".punkty").text("Liczba punktów: " + iloscPunktow);
+              $(element).removeClass("punkt");
+            }
+          });
+
           $(".kratkaMapy").empty();
           $(element).append(`<div class="kropka"></div>`);
         } else if (
