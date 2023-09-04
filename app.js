@@ -74,8 +74,6 @@ $(function () {
   // bindowanie przycisków wsad do chodzenia
   $("body").bind("keypress", function (e) {
     $(".blad").text("");
-    let obecnaPozycja = {};
-
     let uzywaneKlucz = {
       //wsad
       119: {
@@ -97,7 +95,7 @@ $(function () {
     };
 
     if (e.keyCode in uzywaneKlucz) {
-      nowaPozycja = {
+      let nowaPozycja = {
         x: $(".kropka").parent().data("x") + uzywaneKlucz[e.keyCode].x,
         y: $(".kropka").parent().data("y") + uzywaneKlucz[e.keyCode].y,
       };
