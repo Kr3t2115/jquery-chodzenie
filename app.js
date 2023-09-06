@@ -1,36 +1,22 @@
 $(function () {
   // wszystkie pszeszkody
-  let tablicaPszeszkod = [
-    {
-      x: 9,
-      y: 0,
-    },
-    {
-      x: 8,
-      y: 0,
-    },
-    {
-      x: 9,
-      y: 1,
-    },
-    {
-      x: 8,
-      y: 1,
-    },
-  ];
 
-  let tablicaPunktow = [
-    {
-      x: 2,
-      y: 0,
-      czyZebrane: false,
+  let polaSpecjalne = {
+    9: {
+      0: "pszeszkoda",
+      1: "pszeszkoda",
     },
-    {
-      x: 4,
-      y: 2,
-      czyZebrane: false,
+    8: {
+      0: "pszeszkoda",
+      1: "pszeszkoda",
     },
-  ];
+    2: {
+      0: "punkt",
+    },
+    4: {
+      2: "punkt",
+    },
+  };
 
   let iloscPunktow = 0;
 
@@ -40,17 +26,14 @@ $(function () {
       let czyPszeszkoda = false;
       let czyPunkt = false;
 
-      $.each(tablicaPszeszkod, function (index, pszeszkoda) {
-        if (pszeszkoda.x == j && pszeszkoda.y == i) {
+      if (polaSpecjalne[j] !== undefined && polaSpecjalne[j][i] !== undefined) {
+        if (polaSpecjalne[j][i] == "pszeszkoda") {
           czyPszeszkoda = true;
         }
-      });
-
-      $.each(tablicaPunktow, function (index, punkt) {
-        if (punkt.x == j && punkt.y == i) {
+        if (polaSpecjalne[j][i] == "punkt") {
           czyPunkt = true;
         }
-      });
+      }
 
       $(".mapa").append(
         `<div data-x="${j}" data-y="${i}" ${
@@ -64,31 +47,49 @@ $(function () {
     }
   }
 
+  function czyWychodziPozaMape(x, y) {
+    return x < 0 || y < 0 || x > 9 || y > 7;
+  }
+
   // ustawienie pozycji startowej kropki
-  $(".kratkaMapy").each(function (index, element) {
-    if ($(element).data("x") == 0 && $(element).data("y") == 0) {
-      $(element).append(`<div class="kropka"></div>`);
-    }
-  });
+
+  $('.kratkaMapy[data-x="0"][data-y="0"]').append(`<div class="kropka"></div>`);
 
   // bindowanie przycisków wsad do chodzenia
-  $("body").bind("keypress", function (e) {
+  $("body").on("keydown", function (e) {
     $(".blad").text("");
     let uzywaneKlucz = {
       //wsad
-      119: {
+      87: {
         y: -1,
         x: 0,
       },
-      115: {
+      83: {
         y: 1,
         x: 0,
       },
-      100: {
+      68: {
         y: 0,
         x: 1,
       },
-      97: {
+      65: {
+        y: 0,
+        x: -1,
+      },
+      //strzalki
+      38: {
+        y: -1,
+        x: 0,
+      },
+      40: {
+        y: 1,
+        x: 0,
+      },
+      39: {
+        y: 0,
+        x: 1,
+      },
+      37: {
         y: 0,
         x: -1,
       },
@@ -100,42 +101,32 @@ $(function () {
         y: $(".kropka").parent().data("y") + uzywaneKlucz[e.keyCode].y,
       };
 
-      $(".kratkaMapy").each(function (index, element) {
+      let element = $(
+        `.kratkaMapy[data-x="${nowaPozycja.x}"][data-y="${nowaPozycja.y}"]`
+      );
+      if (
+        element.data("pszeszkoda") != true &&
+        !czyWychodziPozaMape(nowaPozycja.x, nowaPozycja.y)
+      ) {
         if (
-          $(element).data("x") == nowaPozycja.x &&
-          $(element).data("y") == nowaPozycja.y &&
-          $(element).data("pszeszkoda") != true
+          polaSpecjalne[$(element).data("x")] !== undefined &&
+          polaSpecjalne[$(element).data("x")][$(element).data("y")] !==
+            undefined &&
+          polaSpecjalne[$(element).data("x")][$(element).data("y")] == "punkt"
         ) {
-          $.each(tablicaPunktow, function (index, punkt) {
-            if (
-              punkt.x == nowaPozycja.x &&
-              punkt.y == nowaPozycja.y &&
-              punkt.czyZebrane == false
-            ) {
-              iloscPunktow++;
-              punkt.czyZebrane = true;
-              $(".punkty").text("Liczba punktów: " + iloscPunktow);
-              $(element).removeClass("punkt");
-            }
-          });
-
-          $(".kratkaMapy").empty();
-          $(element).append(`<div class="kropka"></div>`);
-        } else if (
-          $(element).data("x") == nowaPozycja.x &&
-          $(element).data("y") == nowaPozycja.y &&
-          $(element).data("pszeszkoda") == true
-        ) {
-          $(".blad").text("Tam jest zabronione pole");
-        } else if (
-          nowaPozycja.x < 0 ||
-          nowaPozycja.y < 0 ||
-          nowaPozycja.x > 9 ||
-          nowaPozycja.y > 7
-        ) {
-          $(".blad").text("Gdzie ty chcesz poza mape iść :)");
+          iloscPunktow++;
+          delete polaSpecjalne[$(element).data("x")][$(element).data("y")];
+          $(".punkty").text("Liczba punktów: " + iloscPunktow);
+          $(element).removeClass("punkt");
         }
-      });
+
+        $(".kratkaMapy").empty();
+        $(element).append(`<div class="kropka"></div>`);
+      } else if ($(element).data("pszeszkoda") == true) {
+        $(".blad").text("Tam jest zabronione pole");
+      } else if (czyWychodziPozaMape(nowaPozycja.x, nowaPozycja.y)) {
+        $(".blad").text("Gdzie ty chcesz poza mape iść :)");
+      }
     } else {
       $(".blad").text("Nie możesz użyć tego przycisku");
     }
